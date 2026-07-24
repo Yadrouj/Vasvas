@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Community } from "./Community.jsx";
+import { TopicExplorer } from "./TopicExplorer.jsx";
+import { communitySeedPosts } from "./content.js";
 
 const STORAGE_KEY = "raha-state-v1";
 
@@ -16,6 +19,9 @@ const defaultState = {
   pauseBeforeApps: false,
   watchEnabled: false,
   marja: "آیت‌الله سیستانی",
+  communityPosts: communitySeedPosts,
+  supportedPostIds: [],
+  reportedPostIds: [],
   sharing: {
     messages: true,
     wins: true,
@@ -213,8 +219,21 @@ function App() {
         {screen === "learn" && (
           <Learn appState={appState} update={update} notify={setToast} />
         )}
+        {screen === "community" && (
+          <Community
+            appState={appState}
+            update={update}
+            notify={setToast}
+            onOpenCompanion={() => setScreen("companion")}
+          />
+        )}
         {screen === "companion" && (
-          <Companion appState={appState} update={update} notify={setToast} />
+          <Companion
+            appState={appState}
+            update={update}
+            notify={setToast}
+            onBack={() => setScreen("community")}
+          />
         )}
         {screen === "profile" && (
           <Profile
@@ -224,7 +243,7 @@ function App() {
             notify={setToast}
           />
         )}
-        <BottomNav active={screen} onChange={setScreen} />
+        <BottomNav active={screen === "companion" ? "community" : screen} onChange={setScreen} />
       </main>
 
       {quickOpen && <QuickSupport onClose={() => setQuickOpen(false)} onFinish={finishResponse} />}
@@ -369,6 +388,19 @@ function Home({ appState, onQuick, onAsk, onBreath, onNavigate, onPracticeDone }
         </span>
         <span className="arrow">←</span>
       </button>
+
+      <div className="home-discovery-grid">
+        <button onClick={() => onNavigate("learn")}>
+          <span>✦</span>
+          <strong>همهٔ موضوعات وسواس</strong>
+          <small>زنان، رابطه، شرعی، نشخوار و بیشتر</small>
+        </button>
+        <button onClick={() => onNavigate("community")}>
+          <span>◎</span>
+          <strong>جامعهٔ رها</strong>
+          <small>موضوع بساز و از هم‌قدم‌ها کمک بگیر</small>
+        </button>
+      </div>
 
       <section className="section-block">
         <div className="section-heading">
@@ -528,7 +560,7 @@ function Practice({ appState, update, onQuick, onBreath, notify }) {
 }
 
 function Learn({ appState, update, notify }) {
-  const [tab, setTab] = useState("lessons");
+  const [tab, setTab] = useState("topics");
   const [openLesson, setOpenLesson] = useState(null);
 
   const completeLesson = (id) => {
@@ -539,8 +571,11 @@ function Learn({ appState, update, notify }) {
 
   return (
     <div className="screen">
-      <ScreenHeader eyebrow="کتابخانه رها" title="دانش کم، اما درست" />
-      <div className="segmented">
+      <ScreenHeader eyebrow="مرکز جامع رها" title="موضوع را بشناس؛ چرخه را هدف بگیر" />
+      <div className="segmented segmented-five">
+        <button className={tab === "topics" ? "active" : ""} onClick={() => setTab("topics")}>
+          موضوعات
+        </button>
         <button className={tab === "lessons" ? "active" : ""} onClick={() => setTab("lessons")}>
           آموزش
         </button>
@@ -555,6 +590,7 @@ function Learn({ appState, update, notify }) {
         </button>
       </div>
 
+      {tab === "topics" && <TopicExplorer />}
       {tab === "lessons" && (
         <div className="lesson-list">
           <div className="progress-card">
@@ -767,7 +803,7 @@ function SourceList() {
   );
 }
 
-function Companion({ appState, update, notify }) {
+function Companion({ appState, update, notify, onBack }) {
   const [message, setMessage] = useState("");
   const templates = [
     "می‌بینم خیلی سخت است. کنارت هستم؛ جوابِ وسواس را نمی‌دهم.",
@@ -783,6 +819,9 @@ function Companion({ appState, update, notify }) {
 
   return (
     <div className="screen">
+      <button className="companion-back" onClick={onBack}>
+        → بازگشت به جامعه
+      </button>
       <ScreenHeader eyebrow="حالت همراه" title="کنارش باش، نه کنار وسواس" />
       <div className="pair-card">
         <span className="pair-icon">∞</span>
@@ -1375,8 +1414,8 @@ function BottomNav({ active, onChange }) {
   const items = [
     ["home", "خانه", "⌂"],
     ["practice", "تمرین", "⌁"],
-    ["learn", "یادگیری", "▤"],
-    ["companion", "همراه", "∞"],
+    ["learn", "کشف", "✦"],
+    ["community", "جامعه", "◎"],
     ["profile", "تنظیمات", "◉"],
   ];
   return (

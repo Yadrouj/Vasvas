@@ -2,15 +2,34 @@
 
 ## وضعیت فعلی
 
-نسخه ۰.۱ یک PWA ایستا است:
+نسخه ۰.۲ یک PWA ایستا با پیش‌نمایش جامعه و دروازهٔ عمومی است:
 
 - React + Vite
 - ذخیره محلی در `localStorage`
 - Service Worker برای app shell و نصب روی Home Screen
 - بدون حساب، سرور، تحلیل‌گر یا انتقال داده
 - بدون ادعای مسدودسازی اپ یا خواندن ساعت
+- دایره‌المعارف موضوعی جست‌وجوشونده
+- فید، پیش‌نویس، پاسخ، واکنش و گزارش به‌صورت محلی
+- GitHub Discussions به‌عنوان تالار عمومی زندهٔ موقت
 
-این انتخاب برای تست محتوا و تجربه کاربری کم‌خطر است. قابلیت‌های چنددستگاهی باید جداگانه و بعد از بازبینی بالینی/حریم خصوصی اضافه شوند.
+این انتخاب برای تست محتوا و تجربه کاربری کم‌خطر است. «شبکهٔ اجتماعی واقعی» هنوز به حساب، backend، مدیریت انسانی و مسیر بحران نیاز دارد؛ رابط این مرز را به‌روشنی نشان می‌دهد.
+
+## فاز ۱.۵ — جامعهٔ عمومی مدیریت‌شده
+
+مدل پیشنهادی backend:
+
+- هویت مستعار و تأیید ایمیل/شماره بدون نمایش عمومی؛
+- `Topic`، `Reply`، `Reaction`، `Follow`، `Report` و `ModerationAction`؛
+- نرخ‌محدودسازی و ضداسپم؛
+- فیلتر اولیه برای درخواست دوز، فتوای موردی، اطمینان‌خواهی و محتوای بحران؛
+- صف بازبینی انسانی با متخصصان آموزش‌دیده در OCD؛
+- برچسب محتوای دارای بازبینی بالینی یا فقهی؛
+- قفل موضوع و slow mode برای حلقه‌های اطمینان‌خواهی؛
+- سیاست کودک/نوجوان و جلوگیری از پیام خصوصی بزرگسال به کودک؛
+- فرجام‌خواهی، audit log و محافظت از سلامت مدیران.
+
+فیلتر خودکار فقط سرعت‌دهنده است و نباید خطر یا معنای بالینی را «تشخیص» دهد.
 
 ## فاز ۱ — پایلوت بالینی محلی
 
@@ -105,6 +124,18 @@ UrgeEvent
 
 SupportMessage
   sender_id, recipient_id, encrypted_payload, created_at
+
+Topic
+  author_id, category, title, body, safety_state, created_at
+
+Reply
+  author_id, topic_id, body, safety_state, created_at
+
+Report
+  reporter_id, target_type, target_id, reason, status, created_at
+
+ModerationAction
+  moderator_id, target_type, target_id, action, rationale, created_at
 
 ContentVersion
   type, authority, source_url, reviewed_by, reviewed_at, hash
