@@ -1,0 +1,20 @@
+{
+  "name": "رها؛ همراه وسواس",
+  "short_name": "رها",
+  "description": "ابزار روزانه مبتنی بر شواهد برای پاسخ متفاوت به وسواس",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f0e8",
+  "theme_color": "#173f3a",
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
