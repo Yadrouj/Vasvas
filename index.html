@@ -3,11 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#173f3a" />
+    <meta name="theme-color" content="#f4f1e9" />
     <meta
       name="description"
       content="رها؛ مرکز جامع و جامعهٔ حمایتی فارسی برای OCD، نشخوار، وسواس شرعی، زنان و رابطه"
     />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fa_IR" />
+    <meta property="og:site_name" content="رها" />
+    <meta property="og:title" content="رها | فکر می‌آید؛ انتخاب با توست" />
+    <meta
+      property="og:description"
+      content="یک فضای فارسی، علمی و مهربان برای تمرین پاسخ سالم‌تر به وسواس."
+    />
+    <meta property="og:url" content="https://yadrouj.github.io/Vasvas/" />
+    <meta property="og:image" content="https://yadrouj.github.io/Vasvas/social-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="رها | فکر می‌آید؛ انتخاب با توست" />
+    <meta
+      name="twitter:description"
+      content="همراه فارسی برای پاسخ سالم‌تر به وسواس؛ بدون قضاوت و اطمینان‌دهی."
+    />
+    <meta name="twitter:image" content="https://yadrouj.github.io/Vasvas/social-card.png" />
+    <script>
+      try {
+        const saved = JSON.parse(localStorage.getItem("raha-state-v1") || "{}");
+        const selected = saved.theme || "system";
+        const resolved =
+          selected === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : selected;
+        document.documentElement.dataset.theme = resolved;
+        document.documentElement.dataset.motion = saved.motionEnabled === false ? "off" : "on";
+        document.documentElement.dataset.fun = saved.funEnabled === false ? "off" : "on";
+      } catch {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icon.svg" />

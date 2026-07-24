@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">رها؛ فکر می‌آید، انتخاب با توست</title>
+  <desc id="desc">کارت معرفی رها، همراه فارسی برای پاسخ سالم‌تر به وسواس</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="30" x2="1110" y2="610" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#214E47"/>
+      <stop offset=".55" stop-color="#0F2F2A"/>
+      <stop offset="1" stop-color="#071B18"/>
+    </linearGradient>
+    <radialGradient id="orb">
+      <stop stop-color="#D8F2B7" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#D8F2B7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" rx="48" fill="url(#bg)"/>
+  <circle cx="155" cy="95" r="260" fill="url(#orb)"/>
+  <circle cx="1060" cy="590" r="340" fill="url(#orb)" opacity=".35"/>
+  <g transform="translate(905 74) scale(1.55)">
+    <rect width="96" height="96" rx="28" fill="#0A211D"/>
+    <path d="M68 31c-6-7-14-10-23-9-15 1-26 13-27 28-1 15 10 28 25 30 12 2 23-4 29-13" fill="none" stroke="#D8F2B7" stroke-width="9" stroke-linecap="round"/>
+    <path d="M69 31c8 1 12 5 14 12-7 1-13-2-16-9-1-2 0-3 2-3Z" fill="#D8F2B7"/>
+    <circle cx="73" cy="67" r="3" fill="#D8F2B7"/>
+  </g>
+  <text x="92" y="118" fill="#D8F2B7" font-family="IRANSansX, Arial" font-size="30" font-weight="600">RAHA · رها</text>
+  <text x="92" y="288" fill="#F8FFF3" font-family="IRANSansX, Arial" font-size="76" font-weight="900">فکر می‌آید؛</text>
+  <text x="92" y="384" fill="#D8F2B7" font-family="IRANSansX, Arial" font-size="76" font-weight="900">انتخاب با توست.</text>
+  <text x="96" y="470" fill="#B7CBC5" font-family="IRANSansX, Arial" font-size="28" font-weight="400">همراه فارسی برای پاسخ سالم‌تر به وسواس</text>
+  <rect x="92" y="528" width="300" height="4" rx="2" fill="#7CCDA7"/>
+  <circle cx="1120" cy="72" r="8" fill="#D8F2B7"/>
+</svg>

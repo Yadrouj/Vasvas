@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { BrandLockup, BrandMark } from "./Brand.jsx";
 import { Community } from "./Community.jsx";
+import { NotificationCenter } from "./NotificationCenter.jsx";
+import { ShareRaha } from "./ShareRaha.jsx";
 import { TopicExplorer } from "./TopicExplorer.jsx";
+import { brand } from "./brandData.js";
 import { communitySeedPosts } from "./content.js";
+import { isQuietHour, showRahaNotification } from "./notificationUtils.js";
 
 const STORAGE_KEY = "raha-state-v1";
 
@@ -19,6 +24,22 @@ const defaultState = {
   pauseBeforeApps: false,
   watchEnabled: false,
   marja: "آیت‌الله سیستانی",
+  theme: "system",
+  motionEnabled: true,
+  funEnabled: true,
+  notificationPermission: "default",
+  notificationPrefs: {
+    gentle: true,
+    practice: true,
+    community: false,
+    partner: false,
+    quietStart: 22,
+    quietEnd: 8,
+  },
+  lastReminderAt: null,
+  shareCount: 0,
+  lastSharedAt: null,
+  referredBy: null,
   communityPosts: communitySeedPosts,
   supportedPostIds: [],
   reportedPostIds: [],
@@ -131,7 +152,16 @@ const lessons = [
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return saved ? { ...defaultState, ...saved, sharing: { ...defaultState.sharing, ...saved.sharing } } : defaultState;
+    const referredBy = new URLSearchParams(window.location.search).get("ref");
+    return saved
+      ? {
+          ...defaultState,
+          ...saved,
+          referredBy: saved.referredBy || referredBy,
+          sharing: { ...defaultState.sharing, ...saved.sharing },
+          notificationPrefs: { ...defaultState.notificationPrefs, ...saved.notificationPrefs },
+        }
+      : { ...defaultState, referredBy };
   } catch {
     return defaultState;
   }
@@ -139,16 +169,80 @@ function loadState() {
 
 function App() {
   const [appState, setAppState] = useState(loadState);
-  const [screen, setScreen] = useState("home");
+  const [screen, setScreen] = useState(() => {
+    const requested = new URLSearchParams(window.location.search).get("screen");
+    return ["home", "practice", "learn", "community", "profile"].includes(requested) ? requested : "home";
+  });
   const [quickOpen, setQuickOpen] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
   const [breathOpen, setBreathOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
   const [toast, setToast] = useState("");
   const [installPrompt, setInstallPrompt] = useState(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
   }, [appState]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyAppearance = () => {
+      const theme = appState.theme === "system" ? (media.matches ? "dark" : "light") : appState.theme;
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.dataset.motion = appState.motionEnabled ? "on" : "off";
+      document.documentElement.dataset.fun = appState.funEnabled ? "on" : "off";
+      document.documentElement.style.colorScheme = theme;
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      themeMeta?.setAttribute("content", theme === "dark" ? "#071311" : "#f4f1e9");
+    };
+    applyAppearance();
+    media.addEventListener("change", applyAppearance);
+    return () => media.removeEventListener("change", applyAppearance);
+  }, [appState.funEnabled, appState.motionEnabled, appState.theme]);
+
+  useEffect(() => {
+    if (!appState.reminderEnabled || !appState.notificationPrefs.gentle) return undefined;
+    if (!("Notification" in window) || Notification.permission !== "granted") return undefined;
+
+    const checkReminder = async () => {
+      const now = new Date();
+      if (
+        isQuietHour(
+          appState.notificationPrefs.quietStart,
+          appState.notificationPrefs.quietEnd,
+          now,
+        )
+      ) {
+        return;
+      }
+      const last = appState.lastReminderAt ? new Date(appState.lastReminderAt).getTime() : now.getTime();
+      const due = now.getTime() - last >= appState.reminderEvery * 60 * 60 * 1000;
+      if (!due) return;
+      const sent = await showRahaNotification();
+      if (sent) {
+        setAppState((current) => ({ ...current, lastReminderAt: now.toISOString() }));
+      }
+    };
+
+    const timer = window.setInterval(checkReminder, 60 * 1000);
+    checkReminder();
+    return () => window.clearInterval(timer);
+  }, [
+    appState.lastReminderAt,
+    appState.notificationPrefs.gentle,
+    appState.notificationPrefs.quietEnd,
+    appState.notificationPrefs.quietStart,
+    appState.reminderEnabled,
+    appState.reminderEvery,
+  ]);
+
+  useEffect(() => {
+    if (!celebrating) return undefined;
+    const timer = window.setTimeout(() => setCelebrating(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, [celebrating]);
 
   useEffect(() => {
     const onInstall = (event) => {
@@ -191,7 +285,12 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell redesigned-shell">
+      <div className="ambient-scene" aria-hidden="true">
+        <span className="ambient-orb ambient-one" />
+        <span className="ambient-orb ambient-two" />
+        <span className="ambient-grid" />
+      </div>
       <main className="phone-frame">
         <div className="safe-top" />
         {screen === "home" && (
@@ -200,9 +299,13 @@ function App() {
             onQuick={() => setQuickOpen(true)}
             onAsk={() => setAskOpen(true)}
             onBreath={() => setBreathOpen(true)}
+            onNotifications={() => setNotificationOpen(true)}
+            onShare={() => setShareOpen(true)}
             onNavigate={setScreen}
             onPracticeDone={() => {
               update({ dailyPracticeDone: true, wins: appState.wins + 1 });
+              setCelebrating(true);
+              navigator.vibrate?.([35, 40, 55]);
               setToast("تمرین امروز ثبت شد.");
             }}
           />
@@ -240,6 +343,8 @@ function App() {
             appState={appState}
             update={update}
             onInstall={requestInstall}
+            onNotifications={() => setNotificationOpen(true)}
+            onShare={() => setShareOpen(true)}
             notify={setToast}
           />
         )}
@@ -249,6 +354,23 @@ function App() {
       {quickOpen && <QuickSupport onClose={() => setQuickOpen(false)} onFinish={finishResponse} />}
       {askOpen && <AskRaha appState={appState} onClose={() => setAskOpen(false)} />}
       {breathOpen && <Breathing onClose={() => setBreathOpen(false)} />}
+      {notificationOpen && (
+        <NotificationCenter
+          appState={appState}
+          update={update}
+          notify={setToast}
+          onClose={() => setNotificationOpen(false)}
+        />
+      )}
+      {shareOpen && (
+        <ShareRaha
+          appState={appState}
+          update={update}
+          notify={setToast}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
+      {celebrating && appState.funEnabled && <Celebration />}
       {toast && <div className="toast">{toast}</div>}
     </div>
   );
@@ -267,15 +389,17 @@ function Onboarding({ onDone }) {
           <span className="leaf leaf-one" />
           <span className="leaf leaf-two" />
           <span className="soft-orbit" />
-          <div className="brand-mark">ر</div>
+          <div className="brand-mark">
+            <BrandMark label="" />
+          </div>
         </div>
 
         {step === 0 ? (
           <section className="onboarding-copy">
-            <span className="eyebrow light">یک همراه، نه یک قاضی</span>
-            <h1>جایی برای تمرینِ رها کردنِ قطعیت</h1>
+            <span className="eyebrow light">رها · یک همراه، نه یک قاضی</span>
+            <h1>{brand.slogan}</h1>
             <p>
-              رها کمک می‌کند هنگام وسواس، یک مکث کوتاه بسازید و به زندگی برگردید. آرام و قدم‌به‌قدم.
+              برای جنگیدن با فکر نیامده‌ایم؛ برای پس‌گرفتن انتخاب و برگشتن به زندگی آمده‌ایم.
             </p>
             <button className="primary-button light-button" onClick={() => setStep(1)}>
               شروع کنیم
@@ -338,7 +462,16 @@ function Onboarding({ onDone }) {
   );
 }
 
-function Home({ appState, onQuick, onAsk, onBreath, onNavigate, onPracticeDone }) {
+function Home({
+  appState,
+  onQuick,
+  onAsk,
+  onBreath,
+  onNotifications,
+  onShare,
+  onNavigate,
+  onPracticeDone,
+}) {
   const date = useMemo(
     () =>
       new Intl.DateTimeFormat("fa-IR", {
@@ -351,19 +484,33 @@ function Home({ appState, onQuick, onAsk, onBreath, onNavigate, onPracticeDone }
 
   return (
     <div className="screen home-screen">
-      <header className="topbar">
+      <header className="topbar brand-topbar">
+        <BrandLockup compact />
+        <div className="topbar-actions">
+          <button className="notification-bell" onClick={onNotifications} aria-label="مرکز اعلان">
+            ♢
+            {appState.reminderEnabled && <span />}
+          </button>
+          <button className="avatar-button" onClick={() => onNavigate("profile")} aria-label="پروفایل">
+            {appState.name.slice(0, 1)}
+            <span className="online-dot" />
+          </button>
+        </div>
+      </header>
+
+      <div className="welcome-row">
         <div>
           <span className="date-label">{date}</span>
           <h1>سلام {appState.name}</h1>
         </div>
-        <button className="avatar-button" onClick={() => onNavigate("profile")} aria-label="پروفایل">
-          {appState.name.slice(0, 1)}
-          <span className="online-dot" />
-        </button>
-      </header>
+        <button onClick={onShare}>دعوت یک هم‌قدم ↗</button>
+      </div>
 
-      <section className="hero-card">
-        <span className="hero-kicker">یادآوری امروز</span>
+      <section className="hero-card glass-hero">
+        <div className="hero-brand-orbit" aria-hidden="true">
+          <BrandMark label="" />
+        </div>
+        <span className="hero-kicker">یادآوری امروز · {brand.shortSlogan}</span>
         <h2>لازم نیست این فکر را همین حالا حل کنم.</h2>
         <p>می‌توانم حضورش را تحمل کنم و کار مهم بعدی‌ام را انجام بدهم.</p>
         <span className="hero-line" />
@@ -401,6 +548,16 @@ function Home({ appState, onQuick, onAsk, onBreath, onNavigate, onPracticeDone }
           <small>موضوع بساز و از هم‌قدم‌ها کمک بگیر</small>
         </button>
       </div>
+
+      <button className="viral-invite-card" onClick={onShare}>
+        <span className="invite-spark">✦</span>
+        <span>
+          <small>رها را تکثیر کن، نه وسواس را</small>
+          <strong>این فضای امن را برای یک نفر بفرست</strong>
+          <p>دعوت با لینک ناشناس و متن آماده؛ بدون دسترسی به مخاطبان گوشی.</p>
+        </span>
+        <b>↗</b>
+      </button>
 
       <section className="section-block">
         <div className="section-heading">
@@ -903,43 +1060,11 @@ function Companion({ appState, update, notify, onBack }) {
   );
 }
 
-function Profile({ appState, update, onInstall, notify }) {
-  const enableNotifications = async (enabled) => {
-    if (!enabled) {
-      update({ reminderEnabled: false });
-      return;
-    }
-    if (!("Notification" in window)) {
-      notify("این مرورگر اعلان وب را پشتیبانی نمی‌کند.");
-      return;
-    }
-    const permission = await Notification.requestPermission();
-    update({ reminderEnabled: permission === "granted" });
-    notify(permission === "granted" ? "یادآوری‌ها فعال شدند." : "مجوز اعلان داده نشد.");
-  };
-
-  const testNotification = async () => {
-    if (Notification.permission !== "granted") {
-      notify("ابتدا مجوز اعلان را فعال کنید.");
-      return;
-    }
-    const registration = await navigator.serviceWorker?.ready;
-    if (registration) {
-      registration.showNotification("یک مکث از رها", {
-        body: "شاید، شاید نه. لازم نیست الان بررسی کنی؛ به کار مهمت برگرد.",
-        icon: "./icon.svg",
-      });
-    } else {
-      new Notification("یک مکث از رها", {
-        body: "شاید، شاید نه. لازم نیست الان بررسی کنی؛ به کار مهمت برگرد.",
-      });
-    }
-  };
-
+function Profile({ appState, update, onInstall, onNotifications, onShare, notify }) {
   return (
     <div className="screen profile-screen">
       <ScreenHeader eyebrow="تنظیمات شخصی" title="کنترل در دست شماست" />
-      <section className="profile-card">
+      <section className="profile-card profile-card-pro">
         <div className="large-avatar">{appState.name.slice(0, 1)}</div>
         <div>
           <strong>{appState.name}</strong>
@@ -950,30 +1075,57 @@ function Profile({ appState, update, onInstall, notify }) {
         </button>
       </section>
 
-      <SettingsGroup title="یادآوری‌ها">
+      <div className="profile-slogan">
+        <BrandMark />
+        <span>
+          <small>هویت رها</small>
+          <strong>{brand.slogan}</strong>
+        </span>
+      </div>
+
+      <SettingsGroup title="ظاهر و حس">
+        <div className="theme-picker">
+          {[
+            ["system", "خودکار", "◐"],
+            ["light", "روشن", "☼"],
+            ["dark", "تاریک", "☾"],
+          ].map(([value, label, icon]) => (
+            <button
+              key={value}
+              className={appState.theme === value ? "active" : ""}
+              onClick={() => update({ theme: value })}
+            >
+              <span>{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
         <SettingRow
-          title="یادآوری مهربان"
-          description="پیام‌های کوتاه بدون اطمینان‌دهی"
-          checked={appState.reminderEnabled}
-          onChange={enableNotifications}
+          title="حرکت و انیمیشن"
+          description="خاموش‌کردن، حرکت‌ها را برای دسترس‌پذیری متوقف می‌کند."
+          checked={appState.motionEnabled}
+          onChange={(enabled) => update({ motionEnabled: enabled })}
         />
-        <label className="select-setting">
+        <SettingRow
+          title="جزئیات فان"
+          description="جرقه‌ها، جشن کوچک و ریزتعامل‌های بازی‌گونه"
+          checked={appState.funEnabled}
+          onChange={(enabled) => update({ funEnabled: enabled })}
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title="اعلان و اندروید">
+        <button className="settings-feature-action" onClick={onNotifications}>
+          <span className="settings-feature-icon">♢</span>
           <span>
-            <strong>فاصلهٔ پیشنهادی</strong>
-            <small>یادآوری زیاد می‌تواند خودش اجباری شود.</small>
+            <strong>مرکز اعلان رها</strong>
+            <small>
+              {appState.reminderEnabled
+                ? `فعال · هر ${appState.reminderEvery} ساعت`
+                : "مجوز، نوع پیام و ساعات سکوت"}
+            </small>
           </span>
-          <select
-            value={appState.reminderEvery}
-            onChange={(event) => update({ reminderEvery: Number(event.target.value) })}
-          >
-            <option value={2}>هر ۲ ساعت</option>
-            <option value={3}>هر ۳ ساعت</option>
-            <option value={4}>هر ۴ ساعت</option>
-            <option value={6}>هر ۶ ساعت</option>
-          </select>
-        </label>
-        <button className="outline-button" onClick={testNotification}>
-          فرستادن اعلان آزمایشی
+          <b>←</b>
         </button>
       </SettingsGroup>
 
@@ -1014,6 +1166,10 @@ function Profile({ appState, update, onInstall, notify }) {
       </SettingsGroup>
 
       <SettingsGroup title="اپ و داده">
+        <button className="settings-action" onClick={onShare}>
+          <span>دعوت و اشتراک‌گذاری رها</span>
+          <b>↗</b>
+        </button>
         <button className="settings-action" onClick={onInstall}>
           <span>افزودن رها به صفحهٔ اصلی</span>
           <b>←</b>
@@ -1396,6 +1552,22 @@ function Breathing({ onClose }) {
         <button className="light-outline" onClick={onClose}>
           {elapsed >= total ? "بازگشت" : "پایان زودتر"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+function Celebration() {
+  return (
+    <div className="celebration" aria-hidden="true">
+      {["✦", "●", "◆", "✦", "●", "◆", "✦", "●", "◆", "✦", "●", "◆"].map((shape, index) => (
+        <span key={`${shape}-${index}`} style={{ "--i": index }}>
+          {shape}
+        </span>
+      ))}
+      <div>
+        <BrandMark label="" />
+        <strong>یک انتخاب تازه!</strong>
       </div>
     </div>
   );
