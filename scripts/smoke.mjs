@@ -62,12 +62,29 @@ try {
   await page.screenshot({ path: path.join(artifacts, "03-guided-chat.png"), fullPage: true });
 
   await page.locator(".chat-header > button").click();
-  await page.getByRole("button", { name: /یادگیری/ }).click();
+  await page.getByRole("button", { name: /کشف/ }).click();
+  await page.getByText("دایره‌المعارف رها").waitFor();
+  await page.getByRole("button", { name: /وسواس رابطه و ازدواج/ }).click();
+  await page.getByText("اولین پاسخ کم‌خطر").waitFor();
+  await page.screenshot({ path: path.join(artifacts, "04-topic-detail.png"), fullPage: true });
+  await page.getByRole("button", { name: "بستن" }).click();
   await page.getByRole("button", { name: "دارو" }).click();
   await page.getByText("پروپرانولول", { exact: true }).waitFor();
-  await page.screenshot({ path: path.join(artifacts, "04-medicine.png"), fullPage: true });
+  await page.screenshot({ path: path.join(artifacts, "05-medicine.png"), fullPage: true });
 
-  console.log("Smoke test passed: onboarding, home, guided chat, and medicine panel.");
+  await page.getByRole("button", { name: /جامعه/ }).click();
+  await page.getByText("تالار عمومی زنده", { exact: true }).waitFor();
+  await page.getByRole("button", { name: /پیش‌نویس موضوع/ }).click();
+  await page.getByPlaceholder("مثلاً امروز یک وارسی را انجام ندادم").fill("امروز سؤال تکراری را نپرسیدم");
+  await page
+    .getByPlaceholder(/از تجربهٔ خودت/)
+    .fill("اضطراب بود، اما به‌جای گرفتن تضمین به کار مهم بعدی برگشتم.");
+  await page.locator(".composer-check input").last().check();
+  await page.getByRole("button", { name: "ذخیرهٔ پیش‌نویس امن" }).click();
+  await page.getByText("فقط روی این دستگاه").waitFor();
+  await page.screenshot({ path: path.join(artifacts, "06-community.png"), fullPage: true });
+
+  console.log("Smoke test passed: onboarding, guided chat, topic library, medicine, and community composer.");
 } finally {
   if (browser) await browser.close();
   server.kill();
