@@ -1,5 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="128" fill="#173f3a"/>
-  <path d="M361 136c-84 11-151 67-168 143-9 40-2 77 17 106 3-58 28-111 76-153-37 48-51 98-44 151 10-4 19-9 28-15 69-47 102-139 91-232Z" fill="#d8edbb"/>
-  <path d="M143 343c35 2 66 17 91 45" fill="none" stroke="#f4f0e8" stroke-width="22" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">نشان رها</title>
+  <defs>
+    <linearGradient id="bg" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#173F3A"/>
+      <stop offset="1" stop-color="#071B18"/>
+    </linearGradient>
+    <linearGradient id="loop" x1="122" y1="120" x2="392" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7FFF2"/>
+      <stop offset=".55" stop-color="#D7F4B4"/>
+      <stop offset="1" stop-color="#7ED0AA"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="132" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="166" fill="none" stroke="#FFF" stroke-opacity=".06" stroke-width="2"/>
+  <path d="M357 166c-29-30-68-47-110-44-72 5-129 63-132 136-3 73 50 136 121 146 56 8 110-18 139-64" fill="none" stroke="url(#loop)" stroke-width="42" stroke-linecap="round"/>
+  <path d="M360 170c36 3 57 21 65 55-35 5-60-11-74-44-3-7 2-12 9-11Z" fill="#D7F4B4"/>
+  <path d="M337 302c-18 36-54 58-94 56-38-2-70-24-86-57 20 19 45 29 74 29 43 0 78-20 106-28Z" fill="#7ED0AA" opacity=".28"/>
+  <circle cx="380" cy="338" r="13" fill="#D7F4B4" filter="url(#glow)"/>
 </svg>
